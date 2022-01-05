@@ -16,9 +16,29 @@
           </button>
         <div class="card place-card">
           <p style="font-size:large;padding:20px;font-weight:bold;margin:0;text-align: left;">常用地点</p>
-          <div id="place-label" style="margin-left:20px;width:100%;display:flex;justify-content:flex-start;">
-            <img src="./assets/place.png" style="vertical-align:middle;width:30px;height:30px;">
-            <div style="height:30px;line-height:30px;padding-left:10px">北京</div>
+          <div  style="display:flex;justify-content:flex-start;" @click="findLocation(0)">
+            <img src="./assets/place.png" style="vertical-align:middle;width:30px;height:30px;padding-left:10px">
+            <div id="place-label0" style="height:30px;line-height:30px;">{{place[0]}}</div>
+          </div>
+          <div  style="display:flex;justify-content:flex-start;margin-top:25px" @click="findLocation(1)">
+            <img src="./assets/place.png" style="vertical-align:middle;width:30px;height:30px;padding-left:10px">
+            <div id="place-label1" style="height:30px;line-height:30px;">{{place[1]}}</div>
+          </div>
+          <div  style="display:flex;justify-content:flex-start;margin-top:25px" @click="findLocation(2)">
+            <img src="./assets/place.png" style="vertical-align:middle;width:30px;height:30px;padding-left:10px">
+            <div id="place-label2" style="height:30px;line-height:30px;">{{place[2]}}</div>
+          </div>
+          <div  style="display:flex;justify-content:flex-start;margin-top:25px" @click="findLocation(3)">
+            <img src="./assets/place.png" style="vertical-align:middle;width:30px;height:30px;padding-left:10px">
+            <div id="place-label3" style="height:30px;line-height:30px;">{{place[3]}}</div>
+          </div>
+          <div  style="display:flex;justify-content:flex-start;margin-top:25px" @click="findLocation(4)">
+            <img src="./assets/place.png" style="vertical-align:middle;width:30px;height:30px;padding-left:10px">
+            <div id="place-label4" style="height:30px;line-height:30px;">{{place[4]}}</div>
+          </div>
+          <div  style="display:flex;justify-content:flex-start;margin-top:25px" @click="findLocation(5)">
+            <img src="./assets/place.png" style="vertical-align:middle;width:30px;height:30px;padding-left:10px">
+            <div id="place-label5" style="height:30px;line-height:30px;">{{place[5]}}</div>
           </div>
         </div>
       </el-col>
@@ -42,13 +62,12 @@
           <p style="font-size:large;padding:20px;font-weight:bold;margin:0;text-align: left;">资料卡片</p>
           <div id="place-info" style="margin-left:10px;">
             <p style="margin:0;margin-left:10px;text-align: left;">经纬度:</p>
-            <input id="lnglat" value="111" readonly="readonly" style="outline:none;border:0;width:90%">
+            <input id="lnglat" value="" readonly="readonly" style="outline:none;border:0;width:90%">
             <p style="margin:0;margin-left:10px;text-align: left;">地区:</p>
-            <input id="address" value="222" readonly="readonly" style="outline:none;border:0;width:90%">
-            <input id="type" value="333" readonly="readonly" style="outline:none;border:0;width:90%">
+            <input id="address" value="" readonly="readonly" style="outline:none;border:0;width:90%">
           </div>
           <div style="height:100%">
-            <iframe id="result-page" src="" style="scrolling: no;"></iframe>
+            <iframe v-if="iframe_seen" id="result-page" src="https://www.wanweibaike.net/wiki-北京" scrolling= 0; hspace= 100px; vspace= -500px;></iframe>
           </div>
         </div>
       </el-col>
@@ -64,7 +83,24 @@ export default{
   data () {
     return {
       ak: 'IRqbkLBBgG6Amxrb9CKhgUWzl8HY1fs7', // 百度的地图密钥
-      myMap: ''
+      myMap: '',
+      iframe_seen: true,
+      marker: [
+        {lng: 116.4136, lat: 39.8673},
+        {lng: 117.2678, lat: 39.1197},
+        {lng: 126.7124, lat: 49.3102},
+        {lng: 139.7583, lat: 35.7654},
+        {lng: 0, lat: 0},
+        {lng: 0, lat: 0}
+      ],
+      place: [
+        '北京市, 北京市',
+        '天津市, 天津市',
+        '黑龙江省, 黑河市',
+        'Tokyo, Kita',
+        '请尝试点击地图',
+        '地图上的点会加入此列表'
+      ]
     }
   },
   methods: {
@@ -76,7 +112,31 @@ export default{
       document.getElementById('result-page').style.display = 'block'
       console.log(document.getElementById('result-page').display)
     },
+    findLocation (id) {
+      var i = id
+      console.log(id)
+      var point = new BMapGL.Point(this.marker[i].lng, this.marker[i].lat)
+      this.myMap.centerAndZoom(point, 11)
+      var marker = new BMapGL.Marker(point)
+      this.myMap.addOverlay(marker)
+    },
+    updateData (point, address) {
+      console.log('point', point, 'address', address)
+      for (let i = 5; i > 0; i--) {
+        this.marker[i] = this.marker[i - 1]
+        this.place[i] = this.place[i - 1]
+      }
+      this.marker[0].lng = point.lng
+      this.marker[0].lat = point.lat
+      this.place[0] = address.province + ', ' + address.city
+      if (this.place[0] === ', ') this.place[0] = '在海上'
+      for (let i = 0; i < 6; i++) {
+        document.getElementById('place-label' + i).textContent = this.place[i]
+      }
+      console.log('marker', this.marker, 'place', this.place)
+    },
     initMap () {
+      var self = this
       // 传入密钥获取地图回调。
       BMPGL(this.ak).then((BMapGL) => {
         // 创建地图实例
@@ -86,9 +146,72 @@ export default{
         // 初始化地图，设置中心点坐标和地图级别
         map.centerAndZoom(point, 1)
         // 开启鼠标滚轮缩放
-        map.enableScrollWheelZoom(true)
+        map.enableScrollWheelZoom(true) // 启用滚轮放大缩小
+        var scaleCtrl = new BMapGL.ScaleControl() // 添加比例尺控件
+        map.addControl(scaleCtrl)
+        var zoomCtrl = new BMapGL.ZoomControl() // 添加比例尺控件
+        map.addControl(zoomCtrl)
+        var geoc = new BMapGL.Geocoder()
+        function addMarker (point) {
+          var marker = new BMapGL.Marker(point)
+          map.addOverlay(marker)
+          marker.enableDragging() // 设置点可以拖拽
+        }
+        // 添加事件
+        map.addEventListener('click', function (e) {
+          // map.removeOverlay(marker)
+          var pt = e.latlng
+          addMarker(new BMapGL.Point(pt.lng, pt.lat))
+          document.getElementById('lnglat').value = pt.lng + ',' + pt.lat
+          // alert(e.latlng.lng + ', ' + e.latlng.lat)
+          geoc.getLocation(pt, (rs) => {
+            let addComp = rs.addressComponents
+            document.getElementById('address').value = addComp.province + ', ' + addComp.city + ', ' + addComp.district
+            console.log(11)
+            self.updateData(pt, addComp)
+          })
+        })
+        // 定义一个控件类
+        function NodeControl () {
+          this.defaultAnchor = BMAP_ANCHOR_TOP_RIGHT
+          this.defaultOffset = new BMapGL.Size(0)
+        }
+        // 通过JavaScript的prototype属性继承于BMap.Control
+        NodeControl.prototype = new BMapGL.Control()
+
+        // 自定义控件必须实现自己的initialize方法，并且将控件的DOM元素返回
+        // 在本方法中创建个div元素作为控件的容器，并将其添加到地图容器中
+        NodeControl.prototype.initialize = function (map) {
+          // 创建一个dom元素
+          var div = document.createElement('div')
+          // 添加文字说明
+          div.appendChild(document.createTextNode('清除标记'))
+          // 设置样式
+          div.style.cursor = 'pointer'
+          div.style.padding = '7px 10px'
+          div.style.boxShadow = '0 2px 6px 0 rgba(225, 225, 225, 0.5)'
+          div.style.borderRadius = '5px'
+          div.style.backgroundColor = 'white'
+          div.style.color = '#1976D2'
+          // 绑定事件,点击一次清除结点
+          div.onclick = function (e) {
+            map.clearOverlays()
+          }
+          // 添加DOM元素到地图中
+          map.getContainer().appendChild(div)
+          // 将DOM元素返回
+          return div
+        }
+        // 创建控件元素
+        var myNodeCtrl = new NodeControl()
+        // 添加到地图中
+        map.addControl(myNodeCtrl)
+        // var local = new BMapGL.LocalSearch(map, {
+        //   renderOptions: {map: map}
+        // })
+        // local.search('山脉')
         // 保存数据
-        // this.myMap = map
+        this.myMap = map
       })
         .catch((err) => {
           console.log(err)
@@ -97,53 +220,6 @@ export default{
   },
   mounted () {
     this.initMap()
-    // AMapLoader.load({
-    //   'key': 'bfb4efeff9bc386017a868570f5672aa', // 申请好的Web端开发者Key，首次调用 load 时必填
-    //   'version': '2.0', // 指定要加载的 JSAPI 的版本，缺省时默认为 1.4.15
-    //   'plugins': ['AMap.ToolBar', 'AMap.Scale', 'AMap.Geocoder'] // 需要使用的的插件列表，如比例尺'AMap.Scale'等
-    // }).then((AMap) => {
-    //   var map = new AMap.Map('container', {
-    //     zoom: 0,
-    //     center: [116.39, 39.9], // new AMap.LngLat(116.39,39.9)
-    //     isHotspot: true,
-    //     resizeEnable: true
-    //   })
-    //   var toolBar = new AMap.ToolBar()
-    //   var scale = new AMap.Scale()
-    //   var marker = new AMap.Marker()
-    //   var geocoder = new AMap.Geocoder({
-    //     city: '010', // 城市设为北京，默认：“全国”
-    //     radius: 1000
-    //   })
-    //   // 使用鼠标工具，在地图上画标记点
-    //   map.addControl(toolBar)
-    //   map.addControl(scale)
-    //   function regeoCode (e) {
-    //     var lnglat = document.getElementById('lnglat').value.split(',')
-    //     map.add(marker)
-    //     marker.setPosition(lnglat)
-    //     console.log(lnglat)
-    //     geocoder.getAddress(lnglat, function (status, result) {
-    //       console.log(status)
-    //       console.log(result)
-    //       console.log(result.regeoCode)
-    //       if (status === 'complete' && result.regeocode) {
-    //         var address = result.regeocode.formattedAddress
-    //         document.getElementById('address').value = address
-    //       } else {
-    //         console.log('根据经纬度查询地址失败')
-    //       }
-    //     })
-    //   }
-    //   map.on('click', function (e) {
-    //     document.getElementById('lnglat').value = e.lnglat
-    //     console.log(e)
-    //     // document.getElementById("position").display = visible;
-    //     regeoCode(e)
-    //   })
-    // }).catch(e => {
-    //   console.log(e)
-    // })
   }
 
 }
@@ -158,6 +234,9 @@ button{
   border: 0;
   border-radius:10px;
 }
+div{
+  cursor: pointer;
+}
 input::-webkit-input-placeholder {
   color: #999;
   -webkit-transition: color.5s;
@@ -169,8 +248,8 @@ input:focus::-webkit-input-placeholder, input:hover::-webkit-input-placeholder {
 #result-page{
   margin-top:20px;
   transform-origin: left top;
-  transform: scale(0.75,1);
-  width: 400px;
+  transform: scale(0.95,1);
+  width: 250px;
   min-height: 400px;
   border: 0;
 }
@@ -179,8 +258,10 @@ input:focus::-webkit-input-placeholder, input:hover::-webkit-input-placeholder {
   height: 500px;
 }
 #left-part{
+  max-width: 240px;
   margin-left: 20px;
   padding-left: 20px;
+  text-align: left;
 }
 #center-part{
   margin: 20px;
