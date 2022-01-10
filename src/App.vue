@@ -1,6 +1,4 @@
-/* eslint-disable no-undef */
-/* eslint-disable space-before-blocks */
-/* eslint-disable no-unused-vars */
+
 <template>
   <div id="app">
     <el-row :gutter="16">
@@ -48,7 +46,7 @@
         <div class="card search-card">
           <div style="display:flex;flex-direction:right;width:100%">
             <img src="./assets/search.png" style="margin-left:20px;width:30px;height:30px;">
-            <input type="ques-text" style="border:0;outline:none;font-size:medium;margin-left:20px;width:100%"
+            <input  style="border:0;outline:none;font-size:medium;margin-left:20px;width:100%"
               placeholder="请输入需要搜索的内容..." v-model="search_text">
           </div>
           <div style="display:flex;flex-direction:right;height: 100%;">
@@ -56,28 +54,29 @@
           </div>
         </div>
         <div style="display:flex;flex-direction:left;">
-          <button id="dynamic_map" :class="btn_state === 1 ? 'now_btn':'away_btn'"  @click="changeMap('container')" style="margin-left:0px">动态地图</button>
-          <button id="static_map" :class="btn_state === 2 ? 'now_btn':'away_btn'" @click="changeMap('smap_container')"  >静态气候洋流地图</button>
-          <button id="node_map" :class="btn_state === 3 ? 'now_btn':'away_btn'" @click="changeMap('node_container')" >结点图</button>
+          <button id="dynamic_map" :class="btn_state === 1 ? 'now_btn':'away_btn'"  @click="changeMap('container',0)" style="margin-left:0px">动态地图</button>
+          <button id="static_map" :class="btn_state === 2 ? 'now_btn':'away_btn'" @click="changeMap('smap_container',0)"  >静态气候洋流地图</button>
+          <button id="node_map" :class="btn_state === 3 ? 'now_btn':'away_btn'" @click="changeMap('node_container',0)" >结点图</button>
+          <div id="displayNode_info" style="display:none">
+            结果显示
+            <input v-model="display_num" style="text-align:center;margin-top:17px;border:0;outline:none;font-size:medium;width:30px;border-radius:10px;">
+            个节点
+          </div>
         </div>
-        <div class="card map-card">
-          <div id="container" style="display:none;"></div>
+        <div class="card map-card" >
+          <div id="container" style="display:block;"></div>
           <img id="smap_container" style="display:none" src="./assets/map.jpg">
-          <div id="node_container" style="display:block"></div>
+          <div id="node_container" style="display:none;">
+          </div>
         </div>
       </el-col>
       <el-col id="right-part" :span="4">
-        <div class="card result-card" >
-          <p style="font-size:large;padding:20px;font-weight:bold;margin:0;text-align: left;">资料卡片</p>
-          <div id="place-info" style="margin-left:10px;">
-            <p style="margin:0;margin-left:10px;text-align: left;">经纬度:</p>
-            <input id="lnglat" value="" readonly="readonly" style="outline:none;border:0;width:90%">
-            <p style="margin:0;margin-left:10px;text-align: left;">地区:</p>
-            <input id="address" value="" readonly="readonly" style="outline:none;border:0;width:90%">
-          </div>
-          <div style="height:100%">
-            <!--iframe v-if="iframe_seen" id="result-page" src="https://www.wanweibaike.net/wiki-北京" scrolling= 0; hspace= 100px; vspace= -500px;></!--iframe-->
-            <div id="search_result"></div>
+        <div>
+          <div id="place_info" style="margin-left:10px;">
+            <p style="margin:0;margin-left:10px;text-align: left;color:#1976D2">经纬度:</p>
+            <input v-model="lnglat"  readonly="readonly" style="outline:none;border:0;width:90%;background-color:#f7f7f7">
+            <p style="margin:0;margin-left:10px;text-align: left;color:#1976D2">地区:</p>
+            <input v-model="address"  readonly="readonly" style="outline:none;border:0;width:90%;background-color:#f7f7f7">
           </div>
         </div>
       </el-col>
@@ -94,9 +93,13 @@ export default{
   data () {
     return {
       ak: 'IRqbkLBBgG6Amxrb9CKhgUWzl8HY1fs7', // 百度的地图密钥
-      myMap: '',
+      myMap: Node,
+      nodeMap: Node,
       search_text: '',
-      btn_state: 3,
+      display_num: 50,
+      btn_state: 1,
+      lnglat: '',
+      address: '',
       marker: [
         {lng: 116.4136, lat: 39.8673},
         {lng: 117.2678, lat: 39.1197},
@@ -116,32 +119,47 @@ export default{
     }
   },
   methods: {
-    searchQues () {
-      var ques = this.search_text
-      console.log(ques)
-    },
-    changeMap (id) {
+    changeMap (id, num) {
       document.getElementById('smap_container').style.display = 'none'
       document.getElementById('node_container').style.display = 'none'
       document.getElementById('container').style.display = 'none'
-      document.getElementById('smap_container').autofocus = false
-      document.getElementById('node_container').autofocus = false
-      document.getElementById('container').autofocus = false
+      document.getElementById('place_info').style.display = 'none'
+      document.getElementById('node_info').style.display = 'none'
+      document.getElementById('displayNode_info').style.display = 'none'
       if (document.getElementById(id).style.display === 'none') {
         document.getElementById(id).style.display = 'block'
-        document.getElementById(id).autofocus = true
         if (id === 'container') {
           document.getElementById('map_name').textContent = '动态地图'
+          document.getElementById('place_info').style.display = 'block'
           this.btn_state = 1
+          this.initMap()
         } else if (id === 'smap_container') {
           document.getElementById('map_name').textContent = '静态地图'
           this.btn_state = 2
-        } else {
+        } else if (id === 'node_container') {
           document.getElementById('map_name').textContent = '结点图'
+          document.getElementById('node_info').style.display = 'block'
+          document.getElementById('displayNode_info').style.display = 'block'
           this.btn_state = 3
           this.initNode()
         }
       }
+    },
+    searchQues () {
+      document.getElementById('smap_container').style.display = 'none'
+      document.getElementById('node_container').style.display = 'block'
+      document.getElementById('container').style.display = 'none'
+      document.getElementById('place_info').style.display = 'none'
+      document.getElementById('map_name').textContent = '结点图'
+      document.getElementById('node_info').style.display = 'block'
+      document.getElementById('displayNode_info').style.display = 'block'
+      console.log('nodeMAP', this.nodeMap)
+      var ques = this.search_text
+      console.log(ques)
+      let statement = 'MATCH (n)-[r]-(m) WHERE n.subject=~\'.*' + ques + '.*\'' + ' RETURN n,r,m LIMIT ' + this.display_num
+      console.log(statement)
+      this.nodeMap.renderWithCypher(statement)
+      this.transData(this.nodeMAP)
     },
     findLocation (index) {
       var i = index
@@ -174,9 +192,9 @@ export default{
         // 创建地图实例
         let map = new BMapGL.Map('container')
         // 创建点坐标 axios => res 获取的初始化定位坐标
-        let point = new BMapGL.Point(114.031761, 22.542826)
+        let point = new BMapGL.Point(142.1428, 22.542826)
         // 初始化地图，设置中心点坐标和地图级别
-        map.centerAndZoom(point, 1)
+        map.centerAndZoom(point, 0)
         // 开启鼠标滚轮缩放
         map.enableScrollWheelZoom(true) // 启用滚轮放大缩小
         var scaleCtrl = new BMapGL.ScaleControl() // 添加比例尺控件
@@ -194,11 +212,11 @@ export default{
           // map.removeOverlay(marker)
           var pt = e.latlng
           addMarker(new BMapGL.Point(pt.lng, pt.lat))
-          document.getElementById('lnglat').value = pt.lng + ',' + pt.lat
+          self.lnglat = pt.lng + ',' + pt.lat
           // alert(e.latlng.lng + ', ' + e.latlng.lat)
           geoc.getLocation(pt, (rs) => {
             let addComp = rs.addressComponents
-            document.getElementById('address').value = addComp.province + ', ' + addComp.city + ', ' + addComp.district
+            self.address = addComp.province + ', ' + addComp.city + ', ' + addComp.district
             console.log(11)
             self.updateData(pt, addComp)
           })
@@ -281,7 +299,7 @@ export default{
         this.myMap = map
       })
         .catch((err) => {
-          console.log(err)
+          console.log('error', err)
         })
     },
     initNode () {
@@ -294,94 +312,155 @@ export default{
         server_password: 'gaoya1314', // 默认密码为neo4j
         labels: {
           'area': {
-            'caption': '地区',
-            'size': 'points',
-            'community': 'community'
+            'caption': 'area',
+            'size': 3.0,
+            'font': {
+              'size': 40,
+              'color': '#000000'
+            },
+            'community': 'center'
           },
           'area_answer': {
-            'caption': '世界地理知识点内容',
-            'size': 'pagerank',
-            'community': 'community'
+            'caption': 'hidden',
+            'size': 3.0,
+            'font': {
+              'size': 26,
+              'color': 'grey'
+            },
+            'community': 'center'
           },
           'area_ques': {
-            'caption': '世界地理知识点名称',
-            'size': 'pagerank',
-            'community': 'community'
+            'caption': 'subject',
+            'size': 3.0,
+            'font': {
+              'size': 35,
+              'color': '#1976D2'
+            }
           },
           'nature': {
-            'caption': '自然地理',
-            'size': 'points',
-            'community': 'community'
+            'caption': 'scope',
+            'size': 3.0,
+            'font': {
+              'size': 40,
+              'color': '#000000'
+            },
+            'community': 'center'
           },
           'nature_answer': {
-            'caption': '自然地理知识点内容',
-            'size': 'pagerank',
-            'community': 'community'
+            'caption': 'hidden',
+            'size': 3.0,
+            'font': {
+              'size': 26,
+              'color': 'grey'
+            },
+            'community': 'center'
           },
           'nature_ques': {
-            'caption': '自然地理知识点名称',
-            'size': 'pagerank',
-            'community': 'community'
+            'caption': 'subject',
+            'size': 3.0,
+            'font': {
+              'size': 35,
+              'color': '#1976D2'
+            }
           },
           'climate': {
-            'caption': '气候问题',
-            'size': 'points',
-            'community': 'community'
+            'caption': 'scope',
+            'size': 3.0,
+            'font': {
+              'size': 40,
+              'color': '#000000'
+            },
+            'community': 'center'
           },
           'climate_answer': {
-            'caption': '气候问题知识点内容',
-            'size': 'pagerank',
-            'community': 'community'
+            'caption': 'hidden',
+            'size': 3.0,
+            'font': {
+              'size': 26,
+              'color': 'grey'
+            },
+            'community': 'center'
           },
           'climate_ques': {
-            'caption': '气候问题知识点名称',
-            'size': 'pagerank',
-            'community': 'community'
+            'caption': 'subject',
+            'size': 3.0,
+            'font': {
+              'size': 35,
+              'color': '#1976D2'
+            }
           },
           'concept': {
-            'caption': '易混概念',
-            'size': 'points',
-            'community': 'community'
+            'caption': 'main',
+            'size': 3.0,
+            'font': {
+              'size': 40,
+              'color': '#000000'
+            },
+            'community': 'center'
           },
           'concept_answer': {
-            'caption': '易混概念内容',
-            'size': 'pagerank',
-            'community': 'community'
+            'caption': 'hidden',
+            'size': 3.0,
+            'font': {
+              'size': 26,
+              'color': 'grey'
+            },
+            'community': 'center'
           },
           'concept_ques': {
-            'caption': '易混概念知识',
-            'size': 'pagerank',
-            'community': 'community'
+            'caption': 'subject',
+            'size': 3.0,
+            'font': {
+              'size': 35,
+              'color': '#1976D2'
+            }
           },
           'basic': {
-            'caption': '基础知识',
-            'size': 'points',
-            'community': 'community'
+            'caption': 'scope',
+            'size': 3.0,
+            'font': {
+              'size': 40,
+              'color': '#000000'
+            },
+            'community': 'center'
           },
           'basic_answer': {
-            'caption': '基础知识点',
-            'size': 'pagerank',
-            'community': 'community'
+            'caption': 'hidden',
+            'size': 3.0,
+            'font': {
+              'size': 26,
+              'color': 'grey'
+            },
+            'community': 'center'
           },
           'basic_ques': {
-            'caption': '基础知识点名称',
-            'size': 'pagerank',
-            'community': 'community'
+            'caption': 'subject',
+            'size': 3.0,
+            'font': {
+              'size': 35,
+              'color': '#1976D2'
+            }
           },
           'world': {
-            'caption': 'world',
-            'size': 'points',
-            'community': 'community'
+            'caption': 'scope',
+            'size': 3.0,
+            'font': {
+              'size': 40,
+              'color': '#000000'
+            }
           },
           'concept_main': {
-            'caption': 'concept_main',
-            'size': 'pagerank',
-            'community': 'community'
+            'caption': 'scope',
+            'size': 3.0,
+            'font': {
+              'size': 40,
+              'color': '#000000'
+            }
           }
         },
         relationships: {
           'knowledge-point': {
-            'thickness': '1',
+            'thickness': '5',
             'caption': true
           },
           'knowledge-content': {
@@ -397,20 +476,22 @@ export default{
             'caption': true
           }
         },
-        initial_cypher: 'MATCH (n) RETURN n LIMIT 500',
+        initial_cypher: 'MATCH p=()-->()-->() RETURN p LIMIT 50',
         arrows: true
       }
 
       node = new NeoVis(config)
       node.render()
       console.log('node', node)
+      this.nodeMap = node
+      console.log('nodemap', this.nodeMap)
     }
 
   },
   mounted () {
     this.initMap()
     this.initNode()
-    this.changeMap('node_container')
+    // this.changeMap('container')
   }
 
 }
@@ -433,7 +514,7 @@ button{
   height:35px;
 }
 .away_btn:hover{
-  background-color: #c1e3faa8;
+  background-color: rgb(193, 227, 250);
   color: #1976D2;
 }
 
@@ -470,14 +551,20 @@ input:focus::-webkit-input-placeholder, input:hover::-webkit-input-placeholder {
 }
 #container{
   margin: 0px;
+  margin-left:60px;
   height: 500px;
+  width: 90%;
   border-radius: 10px;
 }
 #smap_container{
   margin: 0px;
   height: 500px;
+  margin-left:50px;
+  width: 90%;
   border-radius: 10px;
-  width: 100%;
+}
+#node_container{
+  height: 500px;
 }
 
 #left-part{
@@ -549,12 +636,10 @@ input:focus::-webkit-input-placeholder, input:hover::-webkit-input-placeholder {
 .map-card{
   background-color: white;
   height: 100%;
+  width: 130%;
   height:500px;
   margin-top:0px;
   border-radius: 10px;
-}
-#node_container{
-  height: 500px;
 }
 .result-card{
   background-color: white;
