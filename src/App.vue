@@ -24,7 +24,7 @@
             <img src="./assets/place.png" style="vertical-align:middle;width:30px;height:30px;padding-left:10px">
             <div id="place-label1" style="height:30px;line-height:30px;">{{place[1]}}</div>
           </div>
-          <div  style="display:flex;justify-content:flex-start;margin-top:25px" @click="findLocation(2)">
+          <div class="place-name" style="display:flex;justify-content:flex-start;margin-top:25px" @click="findLocation(2)">
             <img src="./assets/place.png" style="vertical-align:middle;width:30px;height:30px;padding-left:10px">
             <div id="place-label2" style="height:30px;line-height:30px;">{{place[2]}}</div>
           </div>
@@ -54,19 +54,17 @@
           </div>
         </div>
         <div style="display:flex;flex-direction:left;">
-          <button id="dynamic_map" :class="btn_state === 1 ? 'now_btn':'away_btn'"  @click="changeMap('container',0)" style="margin-left:0px">动态地图</button>
-          <button id="static_map" :class="btn_state === 2 ? 'now_btn':'away_btn'" @click="changeMap('smap_container',0)"  >静态气候洋流地图</button>
-          <button id="node_map" :class="btn_state === 3 ? 'now_btn':'away_btn'" @click="changeMap('node_container',0)" >结点图</button>
-          <div id="displayNode_info" style="display:none">
-            结果显示
-            <input v-model="display_num" style="text-align:center;margin-top:17px;border:0;outline:none;font-size:medium;width:30px;border-radius:10px;">
-            个节点
-          </div>
+          <button id="dynamic_map" :class="btn_state === 1 ? 'now_btn':'away_btn'"  @click="changeMap('container')" style="margin-left:0px">动态地图</button>
+          <button id="static_map" :class="btn_state === 2 ? 'now_btn':'away_btn'" @click="changeMap('smap_container')"  >静态气候洋流地图</button>
+          <button id="node_map" :class="btn_state === 3 ? 'now_btn':'away_btn'" @click="changeMap('node_container')" >结点图</button>
         </div>
         <div class="card map-card" >
           <div id="container" style="display:block;"></div>
-          <img id="smap_container" style="display:none" src="./assets/map.jpg">
-          <div id="node_container" style="display:none;">
+          <div id="smap_container" style="display:none">
+            <el-image style="height:100%" :src="url" :preview-src-list="srcList"></el-image>
+          </div>
+          <!-- <img id="smap_container" style="display:none" src="./assets/map.jpg"> -->
+          <div id="node_container" style="display:none">
           </div>
         </div>
       </el-col>
@@ -77,6 +75,12 @@
             <input v-model="lnglat"  readonly="readonly" style="outline:none;border:0;width:90%;background-color:#f7f7f7">
             <p style="margin:0;margin-left:10px;text-align: left;color:#1976D2">地区:</p>
             <input v-model="address"  readonly="readonly" style="outline:none;border:0;width:90%;background-color:#f7f7f7">
+          </div>
+          <div id="displayNode_info" style="margin-left:-50px;display:none;color:#1976D2">
+            结果显示
+            <input v-model="display_num" style="text-align:center;margin-top:17px;border:0;outline:none;font-size:medium;width:30px;border-radius:10px;">
+            个节点
+            <p style="color:grey;margin-left:45px;font-size:small">结点图渲染需要2~3s，请耐心等待</p>
           </div>
         </div>
       </el-col>
@@ -100,6 +104,14 @@ export default{
       btn_state: 1,
       lnglat: '',
       address: '',
+      url: 'https://thumbs.dreamstime.com/z/%E4%B8%96%E7%95%8C%E5%9C%B0%E5%9B%BE%E8%83%8C%E6%99%AF%E4%B8%AD%E7%9A%84%E6%B4%8B%E6%B5%81-%E4%B8%96%E7%95%8C%E5%9C%B0%E5%9B%BE%E8%83%8C%E6%99%AF%E5%9B%BE%E6%8F%92%E5%9B%BE-224188507.jpg',
+      srcList: [
+        'https://thumbs.dreamstime.com/z/%E4%B8%96%E7%95%8C%E5%9C%B0%E5%9B%BE%E8%83%8C%E6%99%AF%E4%B8%AD%E7%9A%84%E6%B4%8B%E6%B5%81-%E4%B8%96%E7%95%8C%E5%9C%B0%E5%9B%BE%E8%83%8C%E6%99%AF%E5%9B%BE%E6%8F%92%E5%9B%BE-224188507.jpg',
+        'https://image4.thenewslens.com/2015/04/Corrientes-oceanicas.png?auto=compress&q=80&w=1080',
+        'https://upload.wikimedia.org/wikipedia/commons/c/c2/ClimateMapWorld.png',
+        'https://pic4.zhimg.com/80/v2-9cae769ecd36fd379421ed8153e9e783_720w.jpg',
+        'http://www.g12e.com/upload/html/2006/12/30/gaoxia7462200612301534930205.jpg'
+      ],
       marker: [
         {lng: 116.4136, lat: 39.8673},
         {lng: 117.2678, lat: 39.1197},
@@ -119,12 +131,26 @@ export default{
     }
   },
   methods: {
-    changeMap (id, num) {
+    searchQues () {
+      document.getElementById('smap_container').style.display = 'none'
+      document.getElementById('node_container').style.display = 'block'
+      document.getElementById('container').style.display = 'none'
+      document.getElementById('place_info').style.display = 'none'
+      document.getElementById('map_name').textContent = '结点图'
+      document.getElementById('displayNode_info').style.display = 'block'
+      console.log('nodeMAP', this.nodeMap)
+      var ques = this.search_text
+      console.log(ques)
+      let statement = 'MATCH (n)-[r]-(m) WHERE n.subject=~\'.*' + ques + '.*\'' + ' RETURN n,r,m LIMIT ' + this.display_num
+      console.log(statement)
+      this.nodeMap.renderWithCypher(statement)
+      this.transData(this.nodeMAP)
+    },
+    changeMap (id) {
       document.getElementById('smap_container').style.display = 'none'
       document.getElementById('node_container').style.display = 'none'
       document.getElementById('container').style.display = 'none'
       document.getElementById('place_info').style.display = 'none'
-      document.getElementById('node_info').style.display = 'none'
       document.getElementById('displayNode_info').style.display = 'none'
       if (document.getElementById(id).style.display === 'none') {
         document.getElementById(id).style.display = 'block'
@@ -138,28 +164,11 @@ export default{
           this.btn_state = 2
         } else if (id === 'node_container') {
           document.getElementById('map_name').textContent = '结点图'
-          document.getElementById('node_info').style.display = 'block'
           document.getElementById('displayNode_info').style.display = 'block'
           this.btn_state = 3
           this.initNode()
         }
       }
-    },
-    searchQues () {
-      document.getElementById('smap_container').style.display = 'none'
-      document.getElementById('node_container').style.display = 'block'
-      document.getElementById('container').style.display = 'none'
-      document.getElementById('place_info').style.display = 'none'
-      document.getElementById('map_name').textContent = '结点图'
-      document.getElementById('node_info').style.display = 'block'
-      document.getElementById('displayNode_info').style.display = 'block'
-      console.log('nodeMAP', this.nodeMap)
-      var ques = this.search_text
-      console.log(ques)
-      let statement = 'MATCH (n)-[r]-(m) WHERE n.subject=~\'.*' + ques + '.*\'' + ' RETURN n,r,m LIMIT ' + this.display_num
-      console.log(statement)
-      this.nodeMap.renderWithCypher(statement)
-      this.transData(this.nodeMAP)
     },
     findLocation (index) {
       var i = index
@@ -199,7 +208,7 @@ export default{
         map.enableScrollWheelZoom(true) // 启用滚轮放大缩小
         var scaleCtrl = new BMapGL.ScaleControl() // 添加比例尺控件
         map.addControl(scaleCtrl)
-        var zoomCtrl = new BMapGL.ZoomControl() // 添加比例尺控件
+        var zoomCtrl = new BMapGL.ZoomControl() // 添加缩放控件
         map.addControl(zoomCtrl)
         var geoc = new BMapGL.Geocoder()
         function addMarker (point) {
@@ -535,11 +544,11 @@ button{
 }
 input::-webkit-input-placeholder {
   color: #999;
-  -webkit-transition: color.5s;
+  transition: color.5s;
 }
 input:focus::-webkit-input-placeholder, input:hover::-webkit-input-placeholder {
   color: #c2c2c2;
-  -webkit-transition: color.5s;
+  transition: color.5s;
 }
 #result-page{
   margin-top:20px;
@@ -558,9 +567,9 @@ input:focus::-webkit-input-placeholder, input:hover::-webkit-input-placeholder {
 }
 #smap_container{
   margin: 0px;
-  height: 500px;
-  margin-left:50px;
-  width: 90%;
+  margin-left:80px;
+  height:500px;
+  width: 80%;
   border-radius: 10px;
 }
 #node_container{
