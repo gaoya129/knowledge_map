@@ -1,0 +1,42 @@
+本体及其属性:
+area-地区：地区名称
+world-世界：世界地理
+area_ques-地区知识点：知识点名称
+area_answer-地区知识点：知识点内容
+
+basic-基础知识：基础知识
+basic_ques-基础知识点：知识点名称
+basic_answer知识点内容
+
+climate-气候：气候问题
+climate_ques-基础知识点：知识点名称
+climate_answer知识点内容
+
+nature-自然地理：自然地理
+natue_ques-自然地理知识点：知识点名称
+nature_answer知识点内容
+
+concept-易混概念：易混概念
+concept_main易混概念分类
+concept_ques-易混概念知识点：知识点名称
+concept_answer知识点内容
+
+knowledge_map-地理知识图谱：地理知识
+
+
+关系：
+world_area 世界-地区
+area_area_ques 地区-地区知识点
+area_ques_answer 地区知识点-地区知识点内容
+
+basic_basic_ques 基础知识-基础知识点
+basic_ques_answer 基础知识点-基础知识点内容
+
+climate_climate_ques 气候-气候问题知识点
+climate_ques_answer 气候问题知识点-气候问题知识点内容
+
+nature_nature_ques 自然地理-自然地理知识点
+nature_ques_answer 自然地理知识点-自然地理知识点内容
+
+concept_concept_ques 易混概念-易混概念知识点
+concept_ques_answer 易混概念知识点-易混概念知识点内容

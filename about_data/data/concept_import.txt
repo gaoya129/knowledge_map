@@ -1,0 +1,22 @@
+CREATE(n:concept {main:'易混概念'});
+
+LOAD CSV WITH HEADERS FROM "file:///concept_main.csv" AS line fieldterminator ','
+create (:concept_main{scope:line.scope});
+
+LOAD CSV WITH HEADERS FROM "file:///concept_ques.csv" AS line fieldterminator ','
+create (:concept_ques{subject:line.subject});
+
+LOAD CSV WITH HEADERS FROM "file:///concept_answer.csv" AS line fieldterminator ','
+create (:concept_answer{content:line.content});
+
+LOAD CSV WITH HEADERS FROM "file:///concept_concept_ques.csv" AS line fieldterminator ','
+match (from: concept_main{scope:line.scope}),(to: concept_ques{subject:line.subject})
+merge (from)-[r:knowledge_point{property:line.relation}]->(to);
+
+LOAD CSV WITH HEADERS FROM "file:///concept_ques_answer.csv" AS line fieldterminator ','
+match (from: concept_ques{subject:line.subject}),(to: concept_answer{content:line.content})
+merge (from)-[r:knowledge_content{property:line.relation}]->(to);
+
+LOAD CSV WITH HEADERS FROM "file:///concept_concept_main.csv" AS line fieldterminator ','
+match (from: concept{main:line.main}),(to: concept_main{scope:line.scope})
+merge (from)-[r:easily_mistoken_concept{property:line.relation}]->(to);

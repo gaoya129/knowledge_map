@@ -1,0 +1,22 @@
+LOAD CSV WITH HEADERS FROM "file:///area.csv" AS line fieldterminator ','
+create (:area{area:line.area});
+
+CREATE(n:world {scope:'世界地理'});
+
+LOAD CSV WITH HEADERS FROM "file:///area_ques.csv" AS line fieldterminator ','
+create (:area_ques{subject:line.subject});
+
+LOAD CSV WITH HEADERS FROM "file:///area_answer.csv" AS line fieldterminator ','
+create (:area_answer{content:line.content});
+
+LOAD CSV WITH HEADERS FROM "file:///area_area_ques.csv" AS line fieldterminator ','
+match (from: area{area:line.area}),(to: area_ques{subject:line.subject})
+merge (from)-[r:knowledge_point{property:line.relation}]->(to);
+
+LOAD CSV WITH HEADERS FROM "file:///area_ques_answer.csv" AS line fieldterminator ','
+match (from: area_ques{subject:line.subject}),(to: area_answer{content:line.content})
+merge (from)-[r:knowledge_content{property:line.relation}]->(to);
+
+LOAD CSV WITH HEADERS FROM "file:///world_area.csv" AS line fieldterminator ','
+match (from: world{scope:line.scope}),(to: area{area:line.area})
+merge (from)-[r:world_geography{property:line.relation}]->(to);

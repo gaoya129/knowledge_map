@@ -1,0 +1,15 @@
+CREATE(n:climate {scope:'气候问题'});
+
+LOAD CSV WITH HEADERS FROM "file:///climate_ques.csv" AS line fieldterminator ','
+create (:climate_ques{subject:line.subject});
+
+LOAD CSV WITH HEADERS FROM "file:///climate_answer.csv" AS line fieldterminator ','
+create (:climate_answer{content:line.content});
+
+LOAD CSV WITH HEADERS FROM "file:///climate_climate_ques.csv" AS line fieldterminator ','
+match (from: climate{scope:line.scope}),(to: climate_ques{subject:line.subject})
+merge (from)-[r:knowledge_point{property:line.relation}]->(to);
+
+LOAD CSV WITH HEADERS FROM "file:///climate_ques_answer.csv" AS line fieldterminator ','
+match (from: climate_ques{subject:line.subject}),(to: climate_answer{content:line.content})
+merge (from)-[r:knowledge_content{property:line.relation}]->(to);

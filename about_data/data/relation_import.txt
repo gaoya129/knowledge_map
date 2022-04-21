@@ -1,0 +1,55 @@
+CREATE(n:question {name:'题目'});
+
+CREATE(n:answer {name:'知识点内容'});
+
+LOAD CSV WITH HEADERS FROM "file:///ques_r1.csv" AS line fieldterminator ','
+match (from: question{name:line.name}),(to: area_ques{subject:line.subject})
+merge (from)-[r:include{property:line.relation}]->(to);
+
+LOAD CSV WITH HEADERS FROM "file:///ques_r2.csv" AS line fieldterminator ','
+match (from: question{name:line.name}),(to: basic_ques{subject:line.subject})
+merge (from)-[r:include{property:line.relation}]->(to);
+
+LOAD CSV WITH HEADERS FROM "file:///ques_r3.csv" AS line fieldterminator ','
+match (from: question{name:line.name}),(to: climate_ques{subject:line.subject})
+merge (from)-[r:include{property:line.relation}]->(to);
+
+LOAD CSV WITH HEADERS FROM "file:///ques_r4.csv" AS line fieldterminator ','
+match (from: question{name:line.name}),(to: concept_ques{subject:line.subject})
+merge (from)-[r:include{property:line.relation}]->(to);
+
+LOAD CSV WITH HEADERS FROM "file:///ques_r5.csv" AS line fieldterminator ','
+match (from: question{name:line.name}),(to: nature_ques{subject:line.subject})
+merge (from)-[r:include{property:line.relation}]->(to);
+
+
+
+LOAD CSV WITH HEADERS FROM "file:///answer_r1.csv" AS line fieldterminator ','
+match (from: answer{name:line.name}),(to: area_answer{content:line.content})
+merge (from)-[r:include{property:line.relation}]->(to);
+
+LOAD CSV WITH HEADERS FROM "file:///answer_r2.csv" AS line fieldterminator ','
+match (from: answer{name:line.name}),(to: basic_answer{content:line.content})
+merge (from)-[r:include{property:line.relation}]->(to);
+
+LOAD CSV WITH HEADERS FROM "file:///answer_r3.csv" AS line fieldterminator ','
+match (from: answer{name:line.name}),(to: climate_answer{content:line.content})
+merge (from)-[r:include{property:line.relation}]->(to);
+
+LOAD CSV WITH HEADERS FROM "file:///answer_r4.csv" AS line fieldterminator ','
+match (from: answer{name:line.name}),(to: concept_answer{content:line.content})
+merge (from)-[r:include{property:line.relation}]->(to);
+
+LOAD CSV WITH HEADERS FROM "file:///answer_r5.csv" AS line fieldterminator ','
+match (from: answer{name:line.name}),(to: nature_answer{content:line.content})
+merge (from)-[r:include{property:line.relation}]->(to);
+
+CREATE(n:answerother {name:'基础知识答案'});
+
+LOAD CSV WITH HEADERS FROM "file:///answer_r6.csv" AS line fieldterminator ','
+match (from: answerother{name:line.name}),(to: basic_answer{content:line.content})
+merge (from)-[r:include{property:line.relation}]->(to);
+
+LOAD CSV WITH HEADERS FROM "file:///answer_r7.csv" AS line fieldterminator ','
+match (from: answerother{name:line.name}),(to: concept_answer{content:line.content})
+merge (from)-[r:include{property:line.relation}]->(to);

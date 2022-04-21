@@ -1,0 +1,15 @@
+CREATE(n:nature {scope:'自然地理'});
+
+LOAD CSV WITH HEADERS FROM "file:///nature_ques.csv" AS line fieldterminator ','
+create (:nature_ques{subject:line.subject});
+
+LOAD CSV WITH HEADERS FROM "file:///nature_answer.csv" AS line fieldterminator ','
+create (:nature_answer{content:line.content});
+
+LOAD CSV WITH HEADERS FROM "file:///nature_nature_ques.csv" AS line fieldterminator ','
+match (from: nature{scope:line.scope}),(to: nature_ques{subject:line.subject})
+merge (from)-[r:knowledge_point{property:line.relation}]->(to);
+
+LOAD CSV WITH HEADERS FROM "file:///nature_ques_answer.csv" AS line fieldterminator ','
+match (from: nature_ques{subject:line.subject}),(to: nature_answer{content:line.content})
+merge (from)-[r:knowledge_content{property:line.relation}]->(to);
